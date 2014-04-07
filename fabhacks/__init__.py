@@ -40,7 +40,7 @@ def create_user( username, directory, key=None, use_sudo=False ):
 def deploy_git( destination, user, repository, branch='master', use_sudo=False  ):
     func = sudo if use_sudo else run
 
-    if not func( 'find {0}.git/index'.format( destination ), warn_only=True ).succeeded:
+    if not func( 'find {0}/.git/index'.format( destination ), warn_only=True ).succeeded:
         func( 'mkdir -p {0}'.format( destination ))
         func( 'chown -R {0}:{0} {1}'.format( user, destination ))
         func( 'git clone -b {0} {1} {2}'.format( branch, repository, destination ), user=user )
