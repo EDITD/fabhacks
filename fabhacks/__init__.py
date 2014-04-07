@@ -2,7 +2,7 @@
 # File: __init__.py
 # Desc: Fabric based deploy hacks
 
-from fabric.api import run, sudo
+from fabric.api import run, sudo, put
 from fabric.context_managers import cd
 
 
@@ -23,14 +23,16 @@ def restart_confirm( check, command, use_sudo=False ):
 def create_user( username, directory, key=None, use_sudo=False ):
     func = sudo if use_sudo else run
 
-    if not func( 'find {0}'.format( directory ), warn_only=True ):
+    if not func( 'find {0}'.format( directory ), warn_only=True ).succeeded:
+        print 'CREATE USER'
         func( 'echo -e "\n\n\n\n\n\n" | adduser {0}'.format( username ))
         # Setup SSH deploy key/etc
         func( 'mkdir -p {0}/.ssh'.format( directory ))
         func( 'chown -R {0}:{0} {1}/.ssh/'.format( username, directory ))
-        # Install deploy key for GitHub => user
-        if key is not None:
-            put( local_path=key, remote_path='{0}/.ssh/id_rsa'.format( username ), use_sudo=use_sudo )
+
+    # Install deploy key for GitHub => user
+    if key is not None:
+        put( local_path=key, remote_path='{0}/.ssh/id_rsa'.format( directory ), use_sudo=use_sudo )
 
 
 # Deploy git app
@@ -38,7 +40,7 @@ def create_user( username, directory, key=None, use_sudo=False ):
 def deploy_git( destination, user, repository, branch='master', use_sudo=False  ):
     func = sudo if use_sudo else run
 
-    if not func( 'find /{0}.git/index'.format( destination ), warn_only=True ):
+    if not func( 'find {0}.git/index'.format( destination ), warn_only=True ).succeeded:
         func( 'mkdir -p {0}'.format( destination ))
         func( 'chown -R {0}:{0} {1}'.format( user, destination ))
         func( 'git clone -b {0} {1} {2}'.format( branch, repository, destination ), user=user )

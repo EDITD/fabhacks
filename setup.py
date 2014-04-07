@@ -7,12 +7,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
-VERSIONS = {
-    'crawl_docs': '0.0.5'
-}
-
 setup(
-    version='0.1.0',
+    version='0.1.1',
     name='Fabhacks',
     description='Some Fabric-based hacks',
     author='Nick @ EDITD',
