@@ -15,7 +15,7 @@ def restart_confirm( check, command, use_sudo=False ):
     status = func( 'ps aux | grep -v grep | grep {0}'.format( check ), warn_only=True )
     if not status.succeeded:
         print 'Restart command failed: {0}, retrying...'.format( command )
-        restart( check, command )
+        restart_confirm( check, command, use_sudo=use_sudo )
 
 
 # Setup app user

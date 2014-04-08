@@ -8,7 +8,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(
-    version='0.1.2',
+    version='0.1.3',
     name='Fabhacks',
     description='Some Fabric-based hacks',
     author='Nick @ EDITD',
