@@ -12,7 +12,7 @@ from fabric.context_managers import cd
 # with a check to ensure running
 def restart_confirm( check, command, backoff=0, use_sudo=False ):
     func = sudo if use_sudo else run
-    func( command )
+    func( command, pty=False )
 
     sleep( backoff )
     status = func( 'ps aux | grep -v grep | grep {0}'.format( check ), quiet=True, warn_only=True )
