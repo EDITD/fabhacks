@@ -2,20 +2,24 @@
 # File: __init__.py
 # Desc: Fabric based deploy hacks
 
+from time import sleep
+
 from fabric.api import run, sudo, put
 from fabric.context_managers import cd
 
 
 # Restart something
 # with a check to ensure running
-def restart_confirm( check, command, use_sudo=False ):
+def restart_confirm( check, command, backoff=0, use_sudo=False ):
     func = sudo if use_sudo else run
     func( command )
 
-    status = func( 'ps aux | grep -v grep | grep {0}'.format( check ), warn_only=True )
+    sleep( backoff )
+    status = func( 'ps aux | grep -v grep | grep {0}'.format( check ), quiet=True, warn_only=True )
     if not status.succeeded:
-        print 'Restart command failed: {0}, retrying...'.format( command )
-        restart_confirm( check, command, use_sudo=use_sudo )
+        backoff += 1
+        print 'Restart command failed: {0}, retrying with {1}s backoff...'.format( command, backoff )
+        restart_confirm( check, command, backoff=backoff, use_sudo=use_sudo )
 
 
 # Setup app user
@@ -23,7 +27,7 @@ def restart_confirm( check, command, use_sudo=False ):
 def create_user( username, directory, key=None, use_sudo=False ):
     func = sudo if use_sudo else run
 
-    if not func( 'find {0}'.format( directory ), warn_only=True ).succeeded:
+    if not func( 'find {0}'.format( directory ), quiet=True, warn_only=True ).succeeded:
         print 'CREATE USER'
         func( 'echo -e "\n\n\n\n\n\n" | adduser {0}'.format( username ))
         # Setup SSH deploy key/etc
@@ -40,7 +44,7 @@ def create_user( username, directory, key=None, use_sudo=False ):
 def deploy_git( destination, user, repository, branch='master', use_sudo=False  ):
     func = sudo if use_sudo else run
 
-    if not func( 'find {0}/.git/index'.format( destination ), warn_only=True ).succeeded:
+    if not func( 'find {0}/.git/index'.format( destination ), quiet=True, warn_only=True ).succeeded:
         func( 'mkdir -p {0}'.format( destination ))
         func( 'chown -R {0}:{0} {1}'.format( user, destination ))
         func( 'git clone -b {0} {1} {2}'.format( branch, repository, destination ), user=user )
@@ -56,9 +60,10 @@ def install_pip( use_sudo=False ):
     func = sudo if use_sudo else run
 
     # Got pip already?
-    if not func( 'which pip', warn_only=True ).succeeded:
+    if not func( 'which pip', quiet=True, warn_only=True ).succeeded:
         func( 'wget https://raw.github.com/pypa/pip/master/contrib/get-pip.py -O /tmp/get-pip.py' )
         func( 'python /tmp/get-pip.py' )
 
     # Downgrade pip to something not built by idiots
+    # no sane person want's to deal with --allow-unverified shit
     func( 'pip install pip==1.4' )
